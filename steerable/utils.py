@@ -19,6 +19,7 @@ from __future__ import print_function
 import os
 import numpy as np
 import skimage
+import skimage.io
 import matplotlib.pyplot as plt
 
 import torch
