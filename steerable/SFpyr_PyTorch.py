@@ -27,11 +27,10 @@ pointOp = math_utils.pointOp
 ################################################################################
 
 
-class SCFpyr_PyTorch(object):
+class SFpyr_PyTorch(object):
     '''
-    This is a modified version of buildSFpyr, that constructs a
-    complex-valued steerable pyramid  using Hilbert-transform pairs
-    of filters. Note that the imaginary parts will *not* be steerable.
+    Constructs a steerable pyramid. Unlike SCFPyr, uses only real-valued 
+    filters and produces a purely real output.
 
     Description of this transform appears in: Portilla & Simoncelli,
     International Journal of Computer Vision, 40(1):49-71, Oct 2000.
@@ -41,10 +40,10 @@ class SCFpyr_PyTorch(object):
       https://github.com/andreydung/Steerable-filter
 
     This code looks very similar to the original Matlab code:
-      https://github.com/LabForComputationalVision/matlabPyrTools/blob/master/buildSCFpyr.m
+      https://github.com/LabForComputationalVision/matlabPyrTools/blob/master/buildSFpyr.m
 
     Also looks very similar to the original Python code presented here:
-      https://github.com/LabForComputationalVision/pyPyrTools/blob/master/pyPyrTools/SCFpyr.py
+      https://github.com/LabForComputationalVision/pyPyrTools/blob/master/pyPyrTools/SFpyr.py
 
     '''
 
@@ -144,7 +143,9 @@ class SCFpyr_PyTorch(object):
 
             order = self.nbands - 1
             const = np.power(2, 2*order) * np.square(factorial(order)) / (self.nbands * factorial(2*order))
-            Ycosn = 2*np.sqrt(const) * np.power(np.cos(self.Xcosn), order) * (np.abs(self.alpha) < np.pi/2) # [n,]
+            #SF ADAPTATION: Modified from the below:
+            #Ycosn = 2*np.sqrt(const) * np.power(np.cos(self.Xcosn), order) * (np.abs(self.alpha) < np.pi/2) # [n,]
+            Ycosn = np.sqrt(const) * np.power(np.cos(self.Xcosn), order)
 
             # Loop through all orientation bands
             orientations = []
@@ -166,6 +167,8 @@ class SCFpyr_PyTorch(object):
 
                 band = math_utils.batch_ifftshift2d(banddft)
                 band = torch.ifft(band, signal_ndim=2)
+                #SF ADAPTATION: For SF pyramid, just take real part of band.
+                band = band[..., 0] #Real part is first entry in last dimension
                 orientations.append(band)
 
             ####################################################################
